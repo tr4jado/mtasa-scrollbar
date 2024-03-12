@@ -1,7 +1,7 @@
 local total = 50
 local visible = 5
 
-local scroll = Scroll.new(5, total)
+local scroll = Scroll.new(visible, total)
 scroll:setParent(30, 10, 50, 100)
 
 local test = {}
