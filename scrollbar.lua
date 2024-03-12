@@ -81,6 +81,10 @@ function Scroll:draw(x, y, width, height, trackColor, gripColor)
     if self.parent then
         if cursor.onBox(unpack(self.parent)) then
             onParent = true
+        else
+            if cursor.onBox(x, y, width, height) then
+                onParent = true
+            end
         end
     else
         onParent = true
