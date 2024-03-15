@@ -118,7 +118,7 @@ addEventHandler('onClientKey', root, function(button, state)
         for _, self in ipairs(Scroll.instances) do
             local parent = self.parent or {self.x, self.y, self.width, self.height}
 
-            if cursor.onBox(unpack(parent)) then
+            if cursor.onBox(unpack(parent)) or cursor.onBox(self.x, self.y, self.width, self.height) then
                 self.value = clamp(self.value + (up and -1 or 1), 0, self.total - self.visible)
             end
         end
