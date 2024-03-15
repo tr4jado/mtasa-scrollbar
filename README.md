@@ -1,25 +1,70 @@
-# Biblioteca ScrollBar para MTA Lua
+# Biblioteca Scroll
 
-## Introdução
-
-Esta biblioteca Lua fornece funcionalidades simples e versáteis para listas em grade (Grid List) no Multi Theft Auto (MTA) scripting. A biblioteca foi projetada para lidar com interações do cursor, entrada de teclado e rolagem dentro de uma área específica.
+Scroll é uma biblioteca Lua projetada para fornecer uma funcionalidade de barra de rolagem interativa para facilitar a navegação em listas ou interfaces de usuário com conteúdo extenso. Com o Scroll, você pode integrar facilmente uma barra de rolagem em suas aplicações ou jogos Lua.
 
 ## Recursos
 
-- **Rolagem**: Incorpora uma barra de rolagem flexível e personalizável para navegar por listas.
+- **Navegação de Conteúdo**: Permite navegar por conteúdo extenso através de uma barra de rolagem.
+- **Controle de Arrastar e Soltar**: Arraste a barra de rolagem para percorrer o conteúdo facilmente.
+- **Controle de Teclado e Mouse**: Use o teclado e o mouse para interagir com a barra de rolagem.
+
+## Instalação
+
+Para usar o Scroll em seu projeto Lua, simplesmente inclua o arquivo `Scroll.lua` em seu diretório de projeto e o requisite em seu código.
+
+1. Adicione o arquivo `scrollbar.lua` em seu sript;
+2. Caso o método `oop` não esteja habilitado, use adicione o código abaixo:
+```xml
+<oop>true</oop>
+```
+3. Em meta.xml adicione o código para seu script reconhecer a biblioteca:
+```xml
+<script src='scrollbar.lua' type='client' cache='false' />
+```
 
 ## Uso
 
-### Funções
+### Criando um Objeto Scroll
 
-- **Scroll.new(min, total)**: Cria uma nova instância de Scroll com um número especificado de itens visíveis e totais.
-- **Scroll:draw(x, y, largura, altura, corDoFundo, corDoGrip):** Desenha a barra de rolagem na tela.
-- **Scroll:getValue():** Obtém o valor atual da rolagem.
-- **Scroll:setValue(value):** Define o valor da rolagem.
-- **Scroll:setParent(x, y, largura, altura):** Define a área para interação.
-- **Scroll:destroy():** Destrói a instância de Scroll.
+```lua
+local minVisibleItems = 5 -- Número mínimo de itens visíveis
+local totalItems = 20 -- Total de itens na lista
+local scroll = Scroll.new(minVisibleItems, totalItems)
+```
 
-### Exemplo
+### Desenhando o Scroll
+
+```lua
+function onRender()
+    scroll:draw(x, y, largura, altura, corDoFundo, corDaBarra)
+end
+```
+
+### Obtendo o Valor Atual
+
+```lua
+local value = scroll:getValue()
+```
+
+### Definindo o Valor
+
+```lua
+scroll:setValue(novoValor)
+```
+
+### Definindo uma Posição Raiz
+
+```lua
+scroll:setParent(x, y, largura, altura)
+```
+
+### Destruindo o Scroll
+
+```lua
+scroll:destroy()
+```
+
+## Exemplo
 
 ```lua
 local total = 50
@@ -43,6 +88,10 @@ addEventHandler('onClientRender', root, function()
 end)
 ```
 
-Sinta-se à vontade para personalizar a biblioteca de acordo com suas necessidades específicas. Se tiver dúvidas ou encontrar problemas, consulte a documentação fornecida ou me chame no Discord. Boa programação!
+## Licença
 
-#### Meu Discord: **tr4jado.**
+Esta biblioteca é licenciada sob a Licença MIT. Consulte o arquivo [LICENSE](LICENSE) para obter detalhes.
+
+---
+
+Sinta-se à vontade para personalizar e integrar a biblioteca Scroll em seus projetos. Se encontrar problemas ou tiver sugestões para melhorias, não hesite em [reportá-los](https://github.com/yourusername/Scroll/issues).
