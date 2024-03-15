@@ -94,15 +94,27 @@ function Scroll:getValue()
 end
 
 function Scroll:setValue(value)
-    self = math.max(0, math.min(value, self.total - self.visible))
+    self = clamp(value, 0, self.total - self.visible)
+    return true
 end
 
 function Scroll:setParent(x, y, width, height)
     self.parent = {x, y, width, height}
+    return true
 end
 
 function Scroll:destroy()
-    self = nil
+    for i, instance in ipairs(Scroll.instances) do
+        if instance == self then
+            table.remove(Scroll.instances, i)
+            self = nil
+
+            collectgarbage()
+            return true
+        end
+    end
+
+    return false
 end
 
 -- Events
