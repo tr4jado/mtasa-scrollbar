@@ -17,28 +17,6 @@ cursor.onBox = function(x, y, w, h)
     return cursor.x >= x and cursor.x <= x + w and cursor.y >= y and cursor.y <= y + h
 end
 
-local Key = {}
-Key.instance = {}
-
-Key.isDown = function(key)
-    return Key.instance[key]
-end
-
-Key.reset = function(key)
-    Key.instance[key] = false
-end
-
-local keyAvailable = {
-    ['mouse_wheel_up'] = true,
-    ['mouse_wheel_down'] = true
-}
-
-for button in pairs(keyAvailable) do
-    bindKey(button, 'down', function(_, state)
-        Key.instance[button] = state == 'down' and cursor.state
-    end)
-end
-
 local reMap = function(value, low1, high1, low2, high2)
     return low2 + (value - low1) * (high2 - low2) / (high1 - low1)
 end
@@ -51,12 +29,18 @@ end
 
 Scroll = {}
 Scroll.__index = Scroll
+Scroll.instances = {}
 
 function Scroll.new(min, total)
     local self = setmetatable({}, Scroll)
 
     self.visible = min
     self.total = total
+
+    self.x = 0
+    self.y = 0
+    self.width = 0
+    self.height = 0
 
     self.value = 0
     self.dragging = false
@@ -65,10 +49,14 @@ function Scroll.new(min, total)
 
     self.parent = false
 
+    table.insert(Scroll.instances, self)
+
     return self
 end
 
 function Scroll:draw(x, y, width, height, trackColor, gripColor)
+    self.x, self.y, self.width, self.height = x, y, width, height
+
     if self.total < self.visible then
         return
     end
@@ -76,25 +64,6 @@ function Scroll:draw(x, y, width, height, trackColor, gripColor)
     cursor.update()
 
     local gripHeight = (height / self.total) * self.visible
-    local onParent = false
-
-    if self.parent then
-        if cursor.onBox(unpack(self.parent)) or cursor.onBox(x, y, width, height) then
-            onParent = true
-        end
-    else
-        onParent = true
-    end
-
-    if onParent then
-        if Key.isDown('mouse_wheel_up') then
-            self.value = math.max(self.value - 1, 0)
-        end
-
-        if Key.isDown('mouse_wheel_down') then
-            self.value = math.min(self.value + 1, self.total - self.visible)
-        end
-    end
 
     if self.dragging then
         self.poses = clamp(cursor.y - self.dragging, y, y + height - gripHeight)
@@ -118,10 +87,6 @@ function Scroll:draw(x, y, width, height, trackColor, gripColor)
 
     dxDrawRectangle(x, y, width, height, trackColor)
     dxDrawRectangle(x, gripY, width, gripHeight, gripColor)
-
-    for button in pairs(keyAvailable) do
-        Key.reset(button)
-    end
 end
 
 function Scroll:getValue()
@@ -139,3 +104,25 @@ end
 function Scroll:destroy()
     self = nil
 end
+
+-- Events
+
+addEventHandler('onClientKey', root, function(button, state)
+    if not state then
+        return
+    end
+
+    if button == 'mouse_wheel_up' or 'mouse_wheel_down' then
+        local up = button == 'mouse_wheel_up'
+
+        for _, self in ipairs(Scroll.instances) do
+            local parent = self.parent or {self.x, self.y, self.width, self.height}
+
+            if cursor.onBox(unpack(parent)) then
+                self.value = math.max(0, math.min(
+                    self.value + (up and -1 or 1), self.total - self.visible)
+                )
+            end
+        end
+    end
+end)
