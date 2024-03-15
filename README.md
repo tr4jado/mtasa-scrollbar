@@ -10,8 +10,6 @@ Scroll é uma biblioteca Lua projetada para fornecer uma funcionalidade de barra
 
 ## Instalação
 
-Para usar o Scroll em seu projeto Lua, simplesmente inclua o arquivo `Scroll.lua` em seu diretório de projeto e o requisite em seu código.
-
 1. Adicione o arquivo `scrollbar.lua` em seu sript;
 2. Caso o método `oop` não esteja habilitado, use adicione o código abaixo:
 ```xml
