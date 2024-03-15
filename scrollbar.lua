@@ -119,9 +119,7 @@ addEventHandler('onClientKey', root, function(button, state)
             local parent = self.parent or {self.x, self.y, self.width, self.height}
 
             if cursor.onBox(unpack(parent)) then
-                self.value = math.max(0, math.min(
-                    self.value + (up and -1 or 1), self.total - self.visible)
-                )
+                self.value = clamp(self.value + (up and -1 or 1), 0, self.total - self.visible)
             end
         end
     end
