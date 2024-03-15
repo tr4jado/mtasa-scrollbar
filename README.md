@@ -27,7 +27,7 @@ Scroll é uma biblioteca Lua projetada para fornecer uma funcionalidade de barra
 ```lua
 local visibleItems = 5 -- Itens visíveis
 local totalItems = 20 -- Total de itens na lista
-local scroll = Scroll.new(minVisibleItems, totalItems)
+local scroll = Scroll.new(visibleItems, totalItems)
 ```
 
 ### Desenhando o Scroll
