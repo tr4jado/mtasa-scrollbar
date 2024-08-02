@@ -94,7 +94,7 @@ function Scroll:getValue()
 end
 
 function Scroll:setValue(value)
-    self = clamp(value, 0, self.total - self.visible)
+    self.value = clamp(value, 0, self.total - self.visible)
     return true
 end
 
@@ -124,7 +124,7 @@ addEventHandler('onClientKey', root, function(button, state)
         return
     end
 
-    if button == 'mouse_wheel_up' or 'mouse_wheel_down' then
+    if button == 'mouse_wheel_up' or button == 'mouse_wheel_down' then
         local up = button == 'mouse_wheel_up'
 
         for _, self in ipairs(Scroll.instances) do
