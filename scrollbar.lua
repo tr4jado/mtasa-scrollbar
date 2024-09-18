@@ -1,137 +1,159 @@
-local screen = Vector2(guiGetScreenSize())
+-- Utils
 
-local cursor = {}
+local screenW, screenH = guiGetScreenSize()
 
-cursor.update = function()
-    cursor.state = isCursorShowing()
-
-    if cursor.state then
-        local x, y = getCursorPosition()
-        cursor.x, cursor.y = x * screen.x, y * screen.y
-    else
-        cursor.x, cursor.y = -1, -1
-    end
-end
-
-cursor.onBox = function(x, y, w, h)
-    return cursor.x >= x and cursor.x <= x + w and cursor.y >= y and cursor.y <= y + h
-end
-
-local reMap = function(value, low1, high1, low2, high2)
+local function reMap(value, low1, high1, low2, high2)
     return low2 + (value - low1) * (high2 - low2) / (high1 - low1)
 end
 
-local clamp = function(value, min, max)
+function math.clamp(value, min, max)
     return math.max(min, math.min(value, max))
 end
 
--- Scroll class
+function math.lerp(a, b, t)
+    return a + (b - a) * t
+end
+
+local function lerp(id, target, duraction)
+    if not cache_lerp then cache_lerp = {} end
+
+    duraction = duraction or 500
+
+    if not cache_lerp[id] then
+        cache_lerp[id] = {
+            target = target,
+            current = target,
+            start = getTickCount(),
+            duraction = duraction
+        }
+    end
+
+    local data = cache_lerp[id]
+
+    if data.target ~= target then
+        data.target = target
+        data.start = getTickCount()
+    end
+
+    local progress = math.min((getTickCount() - data.start) / data.duraction, 1)
+    data.current = math.lerp(data.current, data.target, progress)
+
+    return data.current
+end
+
+local cursor = {
+    state = false,
+    x = 0,
+    y = 0
+}
+
+function cursor:update()
+    local state = isCursorShowing()
+
+    if state then
+        local x, y = getCursorPosition()
+        self.x, self.y = x * screenW, y * screenH
+    end
+
+    self.state = state
+end
+
+function cursor:box(x, y, width, height)
+    return self.x >= x and self.x <= x + width and self.y >= y and self.y <= y + height
+end
+
+-- Scroll
 
 Scroll = {}
 Scroll.__index = Scroll
 Scroll.instances = {}
 
-function Scroll.new(min, total)
-    local self = setmetatable({}, Scroll)
+local list_properties = {
+    value = "number",
+    visible = "number",
+    total = "number",
+    box = "table",
+    animation = "boolean"
+}
 
-    self.visible = min
-    self.total = total
+function Scroll.new(properties)
+    local self = {}
+    setmetatable(self, {__index = Scroll})
 
-    self.x = 0
-    self.y = 0
-    self.width = 0
-    self.height = 0
+    self.box = false
 
     self.value = 0
+    self.visible = 0
+    self.total = 0
+
     self.dragging = false
     self.mouse = false
-    self.poses = 0
 
-    self.parent = false
+    if properties then
+        assert(type(properties) == "table", "Bad argument @ Scroll.new [Expected table at argument 1, got " .. type(properties) .. "]")
+
+        for i, v in pairs(properties) do
+            assert(list_properties[i], "Bad argument @ Scroll.new [Unexpected property '" .. i .. "']")
+            assert(type(v) == list_properties[i], "Bad argument @ Scroll.new [Expected " .. list_properties[i] .. " at property '" .. i .. "', got " .. type(v) .. "]")
+            self[i] = v
+        end
+    end
 
     table.insert(Scroll.instances, self)
-
     return self
 end
 
-function Scroll:draw(x, y, width, height, trackColor, gripColor)
-    self.x, self.y, self.width, self.height = x, y, width, height
+function Scroll:draw(x, y, width, height, backgroundColor, foregroundColor)
+    assert(type(x) == "number", "Bad argument @ Scroll:draw [Expected number at argument 1, got " .. type(x) .. "]")
+    assert(type(y) == "number", "Bad argument @ Scroll:draw [Expected number at argument 2, got " .. type(y) .. "]")
+    assert(type(width) == "number", "Bad argument @ Scroll:draw [Expected number at argument 3, got " .. type(width) .. "]")
+    assert(type(height) == "number", "Bad argument @ Scroll:draw [Expected number at argument 4, got " .. type(height) .. "]")
+    assert(type(backgroundColor) == "number", "Bad argument @ Scroll:draw [Expected number at argument 5, got " .. type(backgroundColor) .. "]")
+    assert(type(foregroundColor) == "number", "Bad argument @ Scroll:draw [Expected number at argument 6, got " .. type(foregroundColor) .. "]")
+    cursor:update()
 
-    if self.total < self.visible then
-        return
-    end
+    if self.total <= self.visible then return end
 
-    cursor.update()
-
-    local gripHeight = (height / self.total) * self.visible
+    local foregroundHeight = (height / self.total) * self.visible
 
     if self.dragging then
-        self.poses = clamp(cursor.y - self.dragging, y, y + height - gripHeight)
         self.value = math.floor(
-            reMap(self.poses, y, y + height - gripHeight, 0, 1) * (self.total - self.visible)
+            reMap(math.clamp(cursor.y - self.dragging, y, y + height - foregroundHeight), y, y + height - foregroundHeight, 0, 1) * (self.total - self.visible)
         )
     end
 
-    local gripY = reMap(self.value, 0, self.total - self.visible, y, y + height - gripHeight)
-    self.poses = gripY
+    local foregroundY = reMap(self.value, 0, self.total - self.visible, y, y + height - foregroundHeight)
 
-    if getKeyState('mouse1') then
-        if cursor.onBox(x, gripY, width, gripHeight) and not self.mouse then
+    if getKeyState("mouse1") then
+        if cursor:box(x, foregroundY, width, foregroundHeight) and not self.mouse then
             self.mouse = true
-            self.dragging = cursor.y - self.poses
+            self.dragging = cursor.y - foregroundY
         end
     else
-        self.mouse = false
         self.dragging = false
+        self.mouse = false
     end
 
-    dxDrawRectangle(x, y, width, height, trackColor)
-    dxDrawRectangle(x, gripY, width, gripHeight, gripColor)
+    dxDrawRectangle(x, y, width, height, backgroundColor)
+    dxDrawRectangle(x, (self.animation and not self.dragging) and lerp(tostring(self), foregroundY) or foregroundY, width, foregroundHeight, foregroundColor)
 end
 
-function Scroll:getValue()
-    return self.value
-end
+addEventHandler("onClientKey", root, function(key, state)
+    if key == "mouse_wheel_down" or key == "mouse_wheel_up" then
+        local self = false
 
-function Scroll:setValue(value)
-    self.value = clamp(value, 0, self.total - self.visible)
-    return true
-end
-
-function Scroll:setParent(x, y, width, height)
-    self.parent = {x, y, width, height}
-    return true
-end
-
-function Scroll:destroy()
-    for i, instance in ipairs(Scroll.instances) do
-        if instance == self then
-            table.remove(Scroll.instances, i)
-            self = nil
-
-            collectgarbage()
-            return true
+        for _, v in ipairs(Scroll.instances) do
+            if v.box and cursor:box(v.box[1], v.box[2], v.box[3], v.box[4]) then
+                self = v
+                break
+            end
         end
-    end
 
-    return false
-end
-
--- Events
-
-addEventHandler('onClientKey', root, function(button, state)
-    if not state then
-        return
-    end
-
-    if button == 'mouse_wheel_up' or button == 'mouse_wheel_down' then
-        local up = button == 'mouse_wheel_up'
-
-        for _, self in ipairs(Scroll.instances) do
-            local parent = self.parent or {self.x, self.y, self.width, self.height}
-
-            if cursor.onBox(unpack(parent)) or cursor.onBox(self.x, self.y, self.width, self.height) then
-                self.value = clamp(self.value + (up and -1 or 1), 0, self.total - self.visible)
+        if self then
+            if key == "mouse_wheel_down" then
+                self.value = math.min(self.value + 1, self.total - self.visible)
+            else
+                self.value = math.max(self.value - 1, 0)
             end
         end
     end
