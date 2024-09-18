@@ -1,95 +1,86 @@
-# Biblioteca Scroll
+# Scroll para MTA em Lua
+Este código implementa uma classe de rolagem (Scroll) para Multi Theft Auto (MTA) em Lua. A classe permite criar barras de rolagem que facilitam a navegação em listas de itens.
 
-Scroll é uma biblioteca Lua projetada para fornecer uma funcionalidade de barra de rolagem interativa para facilitar a navegação em listas ou interfaces de usuário com conteúdo extenso. Com o Scroll, você pode integrar facilmente uma barra de rolagem em suas aplicações ou jogos Lua.
-
-## Recursos
-
-- **Navegação de Conteúdo**: Permite navegar por conteúdo extenso através de uma barra de rolagem.
-- **Controle de Arrastar e Soltar**: Arraste a barra de rolagem para percorrer o conteúdo facilmente.
-- **Controle de Teclado e Mouse**: Use o teclado e o mouse para interagir com a barra de rolagem.
-
-## Instalação
-
-1. Adicione o arquivo `scrollbar.lua` em seu sript;
-2. Caso o método `oop` não esteja habilitado, use adicione o código abaixo:
-```xml
-<oop>true</oop>
-```
-3. Em meta.xml adicione o código para seu script reconhecer a biblioteca:
-```xml
-<script src='scrollbar.lua' type='client' cache='false' />
-```
-
-## Uso
-
-### Criando um Objeto Scroll
+## Exemplo de Uso
+Para criar uma nova instância do Scroll e desenhá-la na tela, utilize o seguinte código:
 
 ```lua
-local visibleItems = 5 -- Itens visíveis
-local totalItems = 20 -- Total de itens na lista
-local scroll = Scroll.new(visibleItems, totalItems)
-```
+local tbl = {}
 
-### Desenhando o Scroll
+local scroll = Scroll.new({
+    visible = 5,
+    total = #tbl,
+    animation = true
+})
 
-```lua
-function onRender()
-    scroll:draw(x, y, largura, altura, corDoFundo, corDaBarra)
-end
-```
+addEventHandler("onClientRender", root, function()
+    scroll:draw(10, 10, 4, 200, tocolor(255, 255, 255, 255), tocolor(0, 0, 0, 255))
 
-### Obtendo o Valor Atual
+    for i = 1, 5 do
+        local index = scroll.value + i
+        local v = tbl[index]
 
-```lua
-local value = scroll:getValue()
-```
-
-### Definindo o Valor
-
-```lua
-scroll:setValue(novoValor)
-```
-
-### Definindo uma Posição Raiz
-
-```lua
-scroll:setParent(x, y, largura, altura)
-```
-
-### Destruindo o Scroll
-
-```lua
-scroll:destroy()
-```
-
-## Exemplo
-
-```lua
-local total = 50
-local visible = 5
-
-local scroll = Scroll.new(visible, total)
-scroll:setParent(30, 10, 50, 100)
-
-local test = {}
-for i = 1, total do
-    table.insert(test, 'Test ' .. i)
-end
-
-addEventHandler('onClientRender', root, function()
-    scroll:draw(10, 10, 10, 100, tocolor(255, 255, 255), tocolor(0, 0, 0))
-
-    for i = 1, visible do
-        local index = i + scroll:getValue()
-        dxDrawText(test[index], 30, 10 + ((i - 1) * 20), 0, 0, tocolor(255, 255, 255))
+        if v then
+            local margin = (i - 1) * 20
+            dxDrawText(tbl[index].name, 20, 10 + margin, 0, 0, tocolor(0, 0, 0, 255))
+        end
     end
+end)
+
+local function generateString()
+    return string.rep(string.char(math.random(65, 90)), 6)
+end
+
+bindKey("k", "down", function()
+    table.insert(tbl, {name = generateString()})
+    scroll.total = #tbl
 end)
 ```
 
+## Funções Principais
+### ``Scroll.new(properties)``
+Cria uma nova instância de Scroll com as propriedades fornecidas.
+
+**Parâmetros:**
+- properties ``(tabela)``: Propriedades da barra de rolagem, como value, visible, total, etc.
+
+**Retorno:**
+- Instância de Scroll
+
+## ``Scroll:draw(x, y, width, height, backgroundColor, foregroundColor)``
+Desenha a barra de rolagem na tela.
+
+**Parâmetros:**
+- x (número): Coordenada X da barra de rolagem.
+- y (número): Coordenada Y da barra de rolagem.
+- width (número): Largura da barra de rolagem.
+- height (número): Altura da barra de rolagem.
+- backgroundColor (cor): Cor de fundo da barra.
+- foregroundColor (cor): Cor do indicador de rolagem.
+
+## Propriedades Disponíveis
+- ``value``: Posição atual da rolagem.
+  - Tipo: number
+  - Exemplo: 0
+
+- ``visible``: Número de itens visíveis na rolagem.
+  - Tipo: number
+  - Exemplo: 5
+
+- ``total``: Total de itens disponíveis na rolagem.
+  - Tipo: number
+  - Exemplo: 100
+
+- ``box``: Área da tela onde o cursor deve estar para usar o scroll.
+  - Tipo: table
+  - Exemplo: {x, y, width, height}
+
+- ``animation``: Define se a rolagem deve ter animação.
+  - Tipo: boolean
+  - Exemplo: true
+
+## Contribuições
+Sinta-se à vontade para fazer melhorias ou enviar pull requests.
+
 ## Licença
-
-Esta biblioteca é licenciada sob a Licença MIT. Consulte o arquivo [LICENSE](LICENSE) para obter detalhes.
-
----
-
-Sinta-se à vontade para personalizar e integrar a biblioteca Scroll em seus projetos. Se encontrar problemas ou tiver sugestões para melhorias, não hesite em [reportá-los](https://github.com/yourusername/Scroll/issues).
+Este código é fornecido sob a Licença MIT.
